@@ -1,4 +1,4 @@
-# NextPath SmartStudy – IoT Module
+# NextPath – IoT Module
 
 Solução IoT desenvolvida para a Global Solution 2025/2 – FIAP  
 **Tema:** O Futuro do Trabalho  
@@ -11,7 +11,7 @@ Guilherme Costeira Braganholo rm560628
 
 ##  Visão Geral
 
-O NextPath SmartStudy IoT é um sistema criado para monitorar o ambiente de estudo do usuário, enviando dados em tempo real via MQTT para o Node-RED, onde são processados e exibidos em um dashboard.
+O NextPath  IoT é um sistema criado para monitorar o ambiente de estudo do usuário, enviando dados em tempo real via MQTT para o Node-RED, onde são processados e exibidos em um dashboard.
 
 Seu objetivo é melhorar foco, registrar automaticamente sessões de estudo e gerar alertas inteligentes sobre condições do ambiente.
 
