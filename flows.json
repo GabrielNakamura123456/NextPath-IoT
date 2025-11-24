@@ -1,0 +1,216 @@
+[
+    {
+        "id": "c8f1b77b.3b7f78",
+        "type": "tab",
+        "label": "NextPath IoT Dashboard",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "3a2d5c2d.8b7a9a",
+        "type": "mqtt in",
+        "z": "c8f1b77b.3b7f78",
+        "name": "MQTT - nextpath/estudo",
+        "topic": "nextpath/estudo/#",
+        "qos": "0",
+        "datatype": "auto",
+        "broker": "8f3d2a9f.1c8a98",
+        "inputs": 0,
+        "x": 140,
+        "y": 120,
+        "wires": [
+            [
+                "d4eab1a2.6e9b18",
+                "e92a1d4b.2c8c4c"
+            ]
+        ]
+    },
+    {
+        "id": "d4eab1a2.6e9b18",
+        "type": "json",
+        "z": "c8f1b77b.3b7f78",
+        "name": "Parse JSON",
+        "x": 360,
+        "y": 120,
+        "wires": [
+            [
+                "a5b9d3c4.7e2ab8"
+            ]
+        ]
+    },
+    {
+        "id": "a5b9d3c4.7e2ab8",
+        "type": "function",
+        "z": "c8f1b77b.3b7f78",
+        "name": "Process Study Event",
+        "func": "// Process Study Event (versão compatível com widgets)\n// Saídas esperadas (na ordem): [ui_text Estudando Agora, ui_gauge Tempo(s), ui_chart Luminosidade, ui_text Notificação]\n\nconst p = msg.payload;\nif (!p || typeof p.usuarioId === 'undefined') {\n  return null;\n}\n\n// normaliza campos\nconst usuario = p.usuarioId;\nconst estudando = (p.estudando === true || p.estudando === 'true');\nconst ambienteBom = (p.ambienteBom === true || p.ambienteBom === 'true');\nconst luminosidade = Number(p.luminosidade || 0);\nconst ts = p.timestamp_ms || Date.now();\n\n// calcula métricas de tempo de estudo no contexto do flow (mesma lógica anterior)\nlet key = 'study_seconds_' + usuario;\nlet stateKey = 'study_state_' + usuario;\nlet lastTsKey = 'last_ts_' + usuario;\n\nlet total = flow.get(key) || 0;\nlet prevState = flow.get(stateKey) || false;\nlet lastTs = flow.get(lastTsKey) || null;\n\nif (estudando && ambienteBom) {\n  if (!prevState) {\n    lastTs = Date.now();\n    flow.set(lastTsKey, lastTs);\n    flow.set(stateKey, true);\n  }\n} else {\n  if (prevState) {\n    let delta = (Date.now() - (lastTs || Date.now())) / 1000.0;\n    total += delta;\n    flow.set(key, total);\n    flow.set(stateKey, false);\n    flow.set(lastTsKey, null);\n  }\n}\n\nlet displayTotal = total;\nif (estudando && ambienteBom && lastTs) {\n  displayTotal += (Date.now() - lastTs) / 1000.0;\n}\n\nconst metrics = {\n  total_seconds_today: Math.round(displayTotal),\n  studying_now: (estudando && ambienteBom)\n};\n\n// alerta textual\nlet alertText = \"\";\nif (!ambienteBom && estudando) {\n  alertText = \"Luz baixa — ajuste iluminação\";\n}\n\n// Prepara 4 mensagens (uma por widget)\nlet mText = { payload: (metrics.studying_now ? \"true\" : \"false\"), topic: \"studying_now\" };\nlet mGauge = { payload: metrics.total_seconds_today, topic: \"total_seconds_today\" };\nlet mChart = { payload: luminosidade, topic: \"luminosidade\" }; // envia só o valor da luminosidade\nlet mNotif = { payload: alertText, topic: \"alert\" };\n\n// Também preserva msg.original para debug se quiser\nmText.original = msg.payload;\nmGauge.original = msg.payload;\nmChart.original = msg.payload;\nmNotif.original = msg.payload;\n\nreturn [mText, mGauge, mChart, mNotif];\n",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 560,
+        "y": 120,
+        "wires": [
+            [
+                "0f7e12f1.8f8b08",
+                "a7b9d2f0.c8d9b",
+                "c92b8f6e.1b6d98",
+                "b3f3a1a9.4d5e2c"
+            ]
+        ]
+    },
+    {
+        "id": "0f7e12f1.8f8b08",
+        "type": "ui_text",
+        "z": "c8f1b77b.3b7f78",
+        "group": "d5c0b9f2.6b7d28",
+        "order": 1,
+        "width": "6",
+        "height": "1",
+        "name": "Estudando Agora",
+        "label": "Estudando Agora",
+        "format": "{{msg.metrics.studying_now}}",
+        "layout": "row-spread",
+        "x": 820,
+        "y": 60,
+        "wires": []
+    },
+    {
+        "id": "a7b9d2f0.c8d9b",
+        "type": "ui_gauge",
+        "z": "c8f1b77b.3b7f78",
+        "name": "Tempo (s) hoje",
+        "group": "d5c0b9f2.6b7d28",
+        "order": 2,
+        "width": "6",
+        "height": "2",
+        "gtype": "gage",
+        "min": 0,
+        "max": "3600",
+        "seg1": "",
+        "seg2": "",
+        "x": 820,
+        "y": 130,
+        "wires": []
+    },
+    {
+        "id": "c92b8f6e.1b6d98",
+        "type": "ui_chart",
+        "z": "c8f1b77b.3b7f78",
+        "name": "Luminosidade (últ. leituras)",
+        "group": "d5c0b9f2.6b7d28",
+        "order": 3,
+        "width": "12",
+        "height": "6",
+        "label": "",
+        "chartType": "line",
+        "xformat": "HH:mm:ss",
+        "nodata": "",
+        "dot": false,
+        "ymin": "",
+        "ymax": "",
+        "removeOlder": "",
+        "removeOlderPoints": "",
+        "cutout": "",
+        "useOneColor": false,
+        "useUTC": false,
+        "colors": [
+            "#1f77b4",
+            "#aec7e8",
+            "#ff7f0e",
+            "#2ca02c",
+            "#98df8a",
+            "#d62728",
+            "#ff9896",
+            "#9467bd",
+            "#c5b0d5"
+        ],
+        "outputs": 1,
+        "useDifferentColor": false,
+        "className": "",
+        "x": 820,
+        "y": 200,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "b3f3a1a9.4d5e2c",
+        "type": "ui_text",
+        "z": "c8f1b77b.3b7f78",
+        "group": "d5c0b9f2.6b7d28",
+        "order": 4,
+        "width": "12",
+        "height": "1",
+        "name": "Notificação: Luz",
+        "label": "Notificação",
+        "format": "{{msg.alert}}",
+        "layout": "row-center",
+        "x": 820,
+        "y": 270,
+        "wires": []
+    },
+    {
+        "id": "e92a1d4b.2c8c4c",
+        "type": "debug",
+        "z": "c8f1b77b.3b7f78",
+        "name": "MQTT RAW",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "x": 340,
+        "y": 60,
+        "wires": []
+    },
+    {
+        "id": "8f3d2a9f.1c8a98",
+        "type": "mqtt-broker",
+        "name": "Broker (config)",
+        "broker": "test.mosquitto.org",
+        "port": "1883",
+        "clientid": "node-red-nextpath",
+        "usetls": false,
+        "protocolVersion": "4",
+        "keepalive": "60",
+        "cleansession": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthPayload": "",
+        "closeTopic": "",
+        "closePayload": "",
+        "willTopic": "",
+        "willQos": "0",
+        "willPayload": ""
+    },
+    {
+        "id": "d5c0b9f2.6b7d28",
+        "type": "ui_group",
+        "name": "NEXTPATH - Estação",
+        "tab": "d2e6942a.9c3b78",
+        "order": 1,
+        "disp": true,
+        "width": "12",
+        "collapse": false
+    },
+    {
+        "id": "d2e6942a.9c3b78",
+        "type": "ui_tab",
+        "name": "NEXTPATH Dashboard",
+        "icon": "dashboard",
+        "order": 1,
+        "disabled": false,
+        "hidden": false
+    },
+    {
+        "id": "5b76144051b6afcb",
+        "type": "global-config",
+        "env": [],
+        "modules": {
+            "node-red-dashboard": "3.6.6"
+        }
+    }
+]
