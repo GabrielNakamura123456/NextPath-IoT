@@ -9,160 +9,147 @@ Guilherme Costeira Braganholo rm560628
 
 ---
 
-##   Visão Geral
+##  Visão Geral
 
-O **NextPath SmartStudy IoT** é um sistema IoT desenvolvido para monitorar o ambiente de estudo do usuário, enviando dados em tempo real para o Node-RED, onde são processados e exibidos em um dashboard completo.
+O NextPath SmartStudy IoT é um sistema criado para monitorar o ambiente de estudo do usuário, enviando dados em tempo real via MQTT para o Node-RED, onde são processados e exibidos em um dashboard.
 
-O objetivo é melhorar o foco, registrar automaticamente sessões de estudo e fornecer alertas inteligentes usando IoT + MQTT + Node-RED.
+Seu objetivo é melhorar foco, registrar automaticamente sessões de estudo e gerar alertas inteligentes sobre condições do ambiente.
 
-Este módulo faz parte da plataforma global **NextPath – SkillUp AI**, focada em requalificação profissional e aprendizado contínuo.
+Arquitetura da Solução
 
----
+ESP32 (LDR) → MQTT (Broker Mosquitto) → Node-RED → Dashboard Web
+Opcional: API Java para armazenamento de sessões de estudo.
 
-##  Arquitetura da Solução
+Componentes utilizados:
 
-ESP32 (LDR) → MQTT (Mosquitto Broker) → Node-RED → Dashboard
-↓
-API Java (opcional)
+ESP32 ou Wokwi
 
-markdown
-Copiar código
+Sensor LDR
 
-### Componentes:
-- **ESP32 ou Wokwi** – capta luminosidade
-- **MQTT Broker** – test.mosquitto.org
-- **Node-RED** – processamento e lógica
-- **Dashboard Web** – visualização
-- **Flows.json** – fluxo completo do projeto
+Broker MQTT: test.mosquitto.org
 
----
+Node-RED
 
-##  Estrutura do Payload
+Node-RED Dashboard
 
-O ESP32 envia dados no tópico:
+Payload Enviado pelo ESP32
+
+O dispositivo publica no tópico:
 
 nextpath/estudo
 
-yaml
-Copiar código
+Formato enviado:
 
-Formato:
-
-```json
 {
-  "usuarioId": 1,
-  "estudando": true,
-  "ambienteBom": true,
-  "luminosidade": 350,
-  "timestamp_ms": 1732390200000
+"usuarioId": 1,
+"estudando": true,
+"ambienteBom": true,
+"luminosidade": 350,
+"timestamp_ms": 1732390200000
 }
 
-
-
-
 Processamento no Node-RED
+
 O arquivo flows.json contém:
 
-Recebimento MQTT
+Recebimento de mensagens MQTT
 
-Parse de JSON
+Conversão de JSON
 
-Cálculo de tempo de estudo
+Cálculo do tempo de estudo
 
-Controle de ambiente (bom/ruim)
+Verificação do ambiente (bom ou ruim)
 
-Emissão de alerta automático
+Emissão de alerta quando a luz está baixa
 
-Atualização do Dashboard
+Envio de dados para o dashboard
 
 Métricas calculadas:
-Tempo real de estudo do dia
 
-Status "Estudando Agora"
+Tempo real de estudo no dia
 
-Luminosidade atual
+Status “Estudando Agora”
 
-Notificação caso a luz esteja baixa
+Última luminosidade recebida
 
- Dashboard
+Texto de notificação quando necessário
+
+Dashboard
+
 O dashboard exibe:
 
 Estudando Agora (true/false)
 
-Tempo acumulado de estudo (gauge)
+Tempo acumulado de estudo em segundos (gauge)
 
-Gráfico de luminosidade
+Gráfico de luminosidade das últimas leituras
 
-Alerta de luz baixa
+Alerta de luz baixa (texto)
 
-Acesse via:
+Acesse o dashboard pelo navegador:
 
-bash
-Copiar código
 http://localhost:1880/ui
-⚙ ORIENTAÇÕES PARA CONFIGURAÇÃO, EXECUÇÃO E TESTES
- 1. Requisitos
-Instale:
 
-Node.js
+Orientações para Configuração, Execução e Testes
+1. Executar o Node-RED
 
-Node-RED
+No terminal, iniciar o Node-RED:
 
-Navegador (Chrome/Edge)
-
-Conta no Wokwi (para simular ESP32)
-
-Broker MQTT: test.mosquitto.org:1883
-
- 2. Executar o Node-RED
-No terminal:
-
-Copiar código
 node-red
-Acesse:
 
-arduino
-Copiar código
+Acessar no navegador:
+
 http://localhost:1880
-Importe o arquivo:
 
- Menu → Import → Upload → flows.json → Deploy
+Importar o fluxo:
 
- 3. Configurar o ESP32 no Wokwi
-Entre em:
+Menu → Import → Upload → flows.json → Deploy
+
+2. Configurar o ESP32 no Wokwi
+
+Acessar:
 
 https://wokwi.com
 
-Use o código fornecido no projeto, incluindo:
+Criar um projeto com ESP32.
 
-WiFi → Wokwi-GUEST
+Adicionar o código do projeto (fornecido na pasta esp32).
 
-MQTT → test.mosquitto.org
+Requisitos do código:
+
+WiFi configurado como Wokwi-GUEST
+
+MQTT apontando para test.mosquitto.org
 
 Leitura do sensor LDR
 
 Publicação no tópico nextpath/estudo
 
-Inicie a simulação.
-A luminosidade pode ser alterada movendo o LDR.
+Envio contínuo a cada 2 segundos
 
- 4. Testar o Dashboard
-Abra:
+Iniciar a simulação.
 
-bash
-Copiar código
+A luminosidade pode ser alterada movendo o LDR no editor.
+
+3. Testar o Dashboard
+
+Acessar no navegador:
+
 http://localhost:1880/ui
-Teste:
 
-✔ Teste de luminosidade
-Muita luz → Ambiente OK
+Testes recomendados:
 
-Pouca luz → Alerta: “Luz baixa — ajuste iluminação”
+Teste de luminosidade
 
-✔ Teste de sessão de estudo
-Se estudando = true e ambienteBom = true
-→ o tempo começa a subir automaticamente.
+Ambiente com mais luz → Dashboard exibe ambiente bom
 
-✔ Teste de gráfico
-Valores de luminosidade devem aparecer como nova linha no chart.
+Ambiente escuro → Aparece alerta de luz baixa
+
+Teste de sessão de estudo
+
+Se o envio incluir estudando = true e ambienteBom = true, o tempo de estudo começa a subir automaticamente.
+
+Teste do gráfico
+
+O gráfico de luminosidade deve exibir os valores enviados pelo ESP32.
 
