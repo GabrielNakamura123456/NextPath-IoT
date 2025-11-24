@@ -4,10 +4,12 @@ Solução IoT desenvolvida para a Global Solution 2025/2 – FIAP
 **Tema:** O Futuro do Trabalho  
 **Projeto:** NextPath – SkillUp AI  
 **Aluno:** Gabriel Nakamura Ogata – RM560671  
+Julio Cesar Dias Vilella rm560494
+Guilherme Costeira Braganholo rm560628
 
 ---
 
-##  Visão Geral
+##   Visão Geral
 
 O **NextPath SmartStudy IoT** é um sistema IoT desenvolvido para monitorar o ambiente de estudo do usuário, enviando dados em tempo real para o Node-RED, onde são processados e exibidos em um dashboard completo.
 
@@ -163,3 +165,4 @@ Se estudando = true e ambienteBom = true
 
 ✔ Teste de gráfico
 Valores de luminosidade devem aparecer como nova linha no chart.
+
