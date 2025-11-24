@@ -54,6 +54,10 @@ Formato:
   "luminosidade": 350,
   "timestamp_ms": 1732390200000
 }
+
+
+
+
 Processamento no Node-RED
 O arquivo flows.json contém:
 
